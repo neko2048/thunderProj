@@ -20,7 +20,7 @@ class ThunderRegrider(object):
         data.time = pd.to_datetime(data.time, format="%Y/%m/%d %H:%M")
         return data
 
-    def getPeriodData(self, lowBoundDate, highBoundDate):
+    def getPeriodData(self, lowBoundDate, highBoundDate, thunderType="CG"):
         if lowBoundDate.month != highBoundDate.month:
             lowData = self.getDataset(lowBoundDate.year, lowBoundDate.month)
             highData = self.getDataset(highBoundDate.year, highBoundDate.month)
@@ -28,17 +28,19 @@ class ThunderRegrider(object):
         else:
             data = self.getDataset(lowBoundDate.year, lowBoundDate.month)
         condition = np.logical_and(data.time >= lowBoundDate, data.time < highBoundDate)
+        condition = np.logical_and(condition, data.type == thunderType)
         return data[condition]
 
-    def getFreq(self, year, month, hourType):
+    def getFreq(self, year, month, hourType, thunderType):
         freqArr = np.zeros(shape=(len(hourOpt), lonOpt.shape[0], lonOpt.shape[1]))
         for i in range(len(hourOpt)):
             lowTimeBound = hourOpt[i] - pd.Timedelta(hours=round(hourType/2, 1)) # include
             highTimeBound = hourOpt[i] + pd.Timedelta(hours=round(hourType/2, 1)) # not include
             #print("{} to {}".format(lowTimeBound, highTimeBound))
-            selectThunderData = self.getPeriodData(lowTimeBound, highTimeBound)
+            selectThunderData = self.getPeriodData(lowTimeBound, highTimeBound, thunderType)
 
             if len(selectThunderData) != 0:
+                print(hourOpt[i])
                 for j in range(len(selectThunderData)):
                     targetLat, targetLon = np.array(selectThunderData.lat)[j], np.array(selectThunderData.lon)[j]
                     if targetLat <= np.max(latOpt) and targetLat >= np.min(latOpt) or targetLon <= np.max(lonOpt) or targetLon >= np.min(lonOpt):
@@ -64,7 +66,7 @@ class NCwriter(object):
         times = ds.createVariable('time', 'i8', ('time',))
         XLAT = ds.createVariable('XLAT', 'f4', ('LAT', 'LON'))
         XLON = ds.createVariable('XLON', 'f4', ('LAT', 'LON'))
-        CGFREQ = ds.createVariable('CGFREQ', 'i8', ('time', 'LAT', 'LON',))
+        CGFREQ = ds.createVariable('CGFRQ', 'i8', ('time', 'LAT', 'LON',))
         times[:] = np.array(wrfData["time"])
         XLAT[:, :] = np.array(wrfData["XLON"])
         XLON[:, :] = np.array(wrfData["XLAT"])
@@ -73,7 +75,7 @@ class NCwriter(object):
         print("    -> {YEAR}{MONTH:02d} NC WRITEN".format(YEAR=year, MONTH=month))
 
 if __name__ ==  "__main__":
-    hourType = 3 
+    hourType = 1 
     config = Config({
         "hourType": str(hourType), 
         "wrfDir": "../dat/CFSR-WRF/CS/", 
@@ -84,6 +86,7 @@ if __name__ ==  "__main__":
     thunderRegrider = ThunderRegrider(thdDir=config["thdDir"])
     ncWriter = NCwriter(outputDir=config["outputDir"])
     dateRange = pd.date_range("1980-03-01", end="2010-11-01", freq="1m")
+    #dateRange = pd.date_range("2005-07-01", end="2005-08-01", freq="1m")
 
     for date in dateRange:
         # ========== file existence check ==========
@@ -107,7 +110,8 @@ if __name__ ==  "__main__":
 
         freqArr = thunderRegrider.getFreq(year = date.year, 
                                           month = date.month, 
-                                          hourType = hourType)
+                                          hourType = hourType, 
+                                          thunderType = "CG")
 
         ncWriter.writeNC(year = date.year, 
                          month = date.month, 
