@@ -22,22 +22,25 @@ class DrawSys(object):
         fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"projection": ccrs.PlateCarree()}, dpi=250)
         ax.set_extent([np.min(xlat), np.max(xlat), np.min(xlon), np.max(xlon)])
 
-        levels = [0, 25, 50, 75, 100, 200, 350, 500, 750, 1000, 1500, 2000, 2100]
-        #levels = [0, 5, 10, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400]
+        levels = [0, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 4100] # 1989-2018
+        #levels = [0, 5, 10, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400] # 2004-2012 ver.1
+        #levels = [0, 5, 10, 25, 50, 100, 150, 200, 300, 400, 500, 600, 700] # 2004-2012 ver.2
         startifiedThunder = self.stratify(historyThunder, levels)
-        cmap = ListedColormap(["#FFFFFF", "#ECF4A8", "#B0D46E", "#FCEF00", "#FDEE89", "#F8AC51", "#F29141", "#F40041", "#F652AB", "#697CFA", "#86A1FF", "#B9D0FF"])
+        #cmap = ListedColormap(["#FFFFFF", "#ECF4A8", "#B0D46E", "#FCEF00", "#FDEE89", "#F8AC51", "#F29141", "#F40041", "#F652AB", "#697CFA", "#86A1FF", "#B9D0FF"])
+        cmap = ListedColormap(["#FFFFFF", "#ECF4A8", "#B0D46E", "#FCEF00", "#FDEE89", "#F8AC51", "#F29141", "#F40041", "#F652AB", "#697CFA", "#86A1FF", "#c8d7f7"])
+        #FREQ = ax.pcolormesh(xlat, xlon, historyThunder, vmin=0, cmap=cmap)
         #FREQ = ax.pcolormesh(xlat, xlon, historyThunder, vmin=0, cmap=cmap)
         FREQ = ax.pcolormesh(xlat, xlon, startifiedThunder, cmap=cmap)
         cbar = plt.colorbar(FREQ, extend="max")
         cbar.set_ticks(np.arange(len(levels)))
-        cbar.set_ticklabels([str(x) for x in levels[:-1]] + [""])
+        cbar.set_ticklabels([str(x) for x in levels][:-1] + [" "])
         cbar.ax.tick_params(labelsize=self.fontsize)
         plt.title("Cumulative Distribution", fontsize=self.titlesize, y=1.05)
         plt.title("COUNT: {}".\
                   format(int(np.sum(historyThunder))), 
                   fontsize=self.fontsize, 
                   zorder=3, loc="left")
-        plt.title("JJA from {} to {}".\
+        plt.title("{} to {}".\
                   format(validDateOpt[0].year, validDateOpt[-1].year), 
                   fontsize=self.fontsize, 
                   zorder=3, loc="right")
@@ -60,16 +63,16 @@ if __name__ == "__main__":
     hourType = 3
     config = {
         "hourType": str(hourType), 
-        "CGFreqDir": "../dat/TDFRQ_{HT}HR/".format(HT=hourType), 
+        "CGFreqDir": "../dat/TDFRQ_{HT}HRfull/".format(HT=hourType), 
         "outputDir": "./"#"../fig/TDFRQ_{HT}HR/".format(HT=hourType), 
         }
 
-    dateRange = pd.date_range("1980-03-01", end="2012-11-01", freq="1m")
-    #dateRange = pd.date_range("2004-03-01", end="2012-11-01", freq="1m")
+    dateRange = pd.date_range("1980-03-01", end="2018-12-01", freq="1MS")
+    #dateRange = pd.date_range("2004-01-01", end="2012-12-01", freq="1MS")
     exampeNCdata = nc.Dataset(config["CGFreqDir"] + "199005.nc")
     xlon, xlat = exampeNCdata["XLON"], exampeNCdata["XLAT"]
     historyThunder = np.zeros(shape=np.array(xlon).shape)
-    monthOpt = [6, 7, 8]
+    monthOpt = [x for x in range(1, 13)]
 
     validDateOpt = []
     for date in dateRange:

@@ -90,7 +90,7 @@ if __name__ ==  "__main__":
 
     ncWriter = NCwriter(outputDir=config["outputDir"])
     #dateRange = pd.date_range("1989-01-01", end="2022-01-01", freq="1MS")
-    dateRange = pd.date_range("2017-01-01", end="2022-01-01", freq="1MS")
+    dateRange = pd.date_range("2019-06-01", end="2022-01-01", freq="1MS")
     #dateRange = pd.date_range("1989-01-01", end="1989-05-01", freq="1MS")
 
     initWRFfileDir = config["wrfDir"] + "CS-198003.nc"

@@ -4,3 +4,4 @@
 *.TXT
 loginGit.sh
 .gitignore
+.*
