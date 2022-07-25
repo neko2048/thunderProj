@@ -51,9 +51,9 @@ if __name__ == "__main__":
         else:
             continue
 
-        condition = np.array(np.logical_and(dBZData >= dBZthreshold, thdData != 0) * taiwanMask3D, dtype=bool)
-        x = thdData[condition]
-        y = csData[condition]
+        condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (taiwanMask3D), dtype=bool)
+        x = csData[condition]
+        y = thdData[condition]
         c = dBZData[condition]
 
         if np.sum(condition != 0):
@@ -68,14 +68,14 @@ if __name__ == "__main__":
     lreg = stats.linregress(x=validX, y=validY)
     print("Printing")
     plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
-    title("Correlation of {X} and {Y}".format(X="CG", Y=csConfig["varName"]), fontsize=25, y=1.075)
+    title("Correlation of {X} and {Y} ".format(X=csConfig["varName"], Y="CG"), fontsize=25, y=1.075)
     title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
     title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
-    xlabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
-    ylabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
+    xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
+    ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
     xticks(fontsize=15)
     yticks(fontsize=15)
-    ylim(bottom=-5)
+    ylim(bottom=0)
     cbar = colorbar(extend="max")
     cbar.set_label("Reflectivity [dBZ]")
     savefig("CG{}_dBZ{}.jpg".format(hourType, dBZthreshold))
