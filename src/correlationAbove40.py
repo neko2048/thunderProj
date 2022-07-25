@@ -8,9 +8,9 @@ import json
 import seaborn as sns
 
 if __name__ == "__main__":
-    thdHour, dBZthreshold = input().split()
-    thdHour = int(thdHour)
-    dBZthreshold = int(dBZthreshold)
+    #thdHour, dBZthreshold = input().split()
+    thdHour = 1#int(thdHour)
+    dBZthreshold = 40#int(dBZthreshold)
     home = "/home/twsand/fskao/thunderProj/"
     thdFreqDir = home + "dat/TDFRQ_{}HR/".format(thdHour) # CGFRQ
     csConfig = json.load(open(home + "dat/varJson/CS.json"))
@@ -41,6 +41,7 @@ if __name__ == "__main__":
             continue
 
         condition = dBZData >= dBZthreshold
+        print(np.sum(condition))
         x = thdData[condition]
         y = csData[condition]
         c = dBZData[condition]

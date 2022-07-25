@@ -6,21 +6,31 @@ from os import path
 from scipy import stats
 import json
 import seaborn as sns
+from countyJudge import CountyJudger
+from fullDateThunderGrid import Config
 
 if __name__ == "__main__":
-    thdHour, dBZthreshold = input().split()
-    thdHour = int(thdHour)
+    hourType, dBZthreshold = input().split()
+    hourType = int(hourType)
     dBZthreshold = int(dBZthreshold)
-    home = "/home/twsand/fskao/thunderProj/"
-    thdFreqDir = home + "dat/TDFRQ_{}HR/".format(thdHour) # CGFRQ
-    csConfig = json.load(open(home + "dat/varJson/CS.json"))
-    dBZConfig = json.load(open(home + "dat/varJson/dBZ_max.json"))
-    monthOpt = [6, 7, 8]
-    dateOpt = pd.date_range("1989-01-01", end="2010-12-31", freq="1m")
-    existDateOpt = []
 
+    config = Config({
+        "home": "/home/twsand/fskao/thunderProj/", 
+        "hourType": str(hourType), 
+        "wrfDir": "%(home)sdat/CFSR-WRF/CS/", 
+        "thdDir": "%(home)sdat/TDFRQ_%(hourType)sHRfull/",
+        "csJsonDir": "%(home)sdat/varJson/CS.json", 
+        "dBZJsonDir": "%(home)sdat/varJson/dBZ_max.json", 
+        "taiwanMaskDir": "%(home)sdat/taiwanMask.npy", 
+        })
+    csConfig = json.load(open(config["csJsonDir"]))
+    dBZConfig = json.load(open(config["dBZJsonDir"]))
+    taiwanMask = np.load(config["taiwanMaskDir"])
+    monthOpt = [6, 7, 8]
+    dateOpt = pd.date_range("1989-01-01", end="2010-12-01", freq="1MS")
+    existDateOpt = []
     for date in dateOpt:
-        if path.exists(thdFreqDir+"{Y}{M:02d}.nc".format(Y=date.year, M=date.month)) and \
+        if path.exists(config["thdDir"]+"{Y}{M:02d}.nc".format(Y=date.year, M=date.month)) and \
            path.exists(csConfig["dir"]+"{Y}{M:02d}.nc".format(Y=date.year, M=date.month)):
            existDateOpt.append(date)
         else:
@@ -34,13 +44,14 @@ if __name__ == "__main__":
     for date in existDateOpt:
         if date.month in monthOpt:
             print(date)
-            thdData = np.array(nc.Dataset(thdFreqDir + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))["CGFRQ"])
+            thdData = np.array(nc.Dataset(config["thdDir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))["CGFRQ"])
             csData = np.array(nc.Dataset(csConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[csConfig["varName"]])
             dBZData = np.array(nc.Dataset(dBZConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[dBZConfig["varName"]])
+            taiwanMask3D = np.tile(taiwanMask[np.newaxis, :, :], reps=[dBZData.shape[0] ,1, 1])
         else:
             continue
 
-        condition = dBZData >= dBZthreshold
+        condition = np.array(np.logical_and(dBZData >= dBZthreshold, thdData != 0) * taiwanMask3D, dtype=bool)
         x = thdData[condition]
         y = csData[condition]
         c = dBZData[condition]
@@ -57,16 +68,16 @@ if __name__ == "__main__":
     lreg = stats.linregress(x=validX, y=validY)
     print("Printing")
     plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
-    title("Correlation of {X} and {Y}".format(X="CG", Y=csConfig["varName"]), fontsize=25, y=1.05)
-    title("Corr: {:.3f}".format(lreg.rvalue), loc="left", fontsize=15)
+    title("Correlation of {X} and {Y}".format(X="CG", Y=csConfig["varName"]), fontsize=25, y=1.075)
+    title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
     title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
-    xlabel("Frequency of Thunder in {} hr(s)".format(thdHour), fontsize=15)
+    xlabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
     ylabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
     xticks(fontsize=15)
     yticks(fontsize=15)
     ylim(bottom=-5)
     cbar = colorbar(extend="max")
     cbar.set_label("Reflectivity [dBZ]")
-    savefig("CG{}_dBZ{}.jpg".format(thdHour, dBZthreshold))
+    savefig("CG{}_dBZ{}.jpg".format(hourType, dBZthreshold))
     clf()
 
