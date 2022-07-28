@@ -22,9 +22,10 @@ class DrawSys(object):
         fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"projection": ccrs.PlateCarree()}, dpi=250)
         ax.set_extent([np.min(xlat), np.max(xlat), np.min(xlon), np.max(xlon)])
 
-        levels = [0, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 4100] # 1989-2018
+        #levels = [0, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 4100] # 1989-2018
         #levels = [0, 5, 10, 20, 30, 50, 75, 100, 150, 200, 250, 300, 400] # 2004-2012 ver.1
         #levels = [0, 5, 10, 25, 50, 100, 150, 200, 300, 400, 500, 600, 700] # 2004-2012 ver.2
+        levels = [0, 50, 100, 150, 450, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2251] # 2004-2012 ver.2
         startifiedThunder = self.stratify(historyThunder, levels)
         #cmap = ListedColormap(["#FFFFFF", "#ECF4A8", "#B0D46E", "#FCEF00", "#FDEE89", "#F8AC51", "#F29141", "#F40041", "#F652AB", "#697CFA", "#86A1FF", "#B9D0FF"])
         cmap = ListedColormap(["#FFFFFF", "#ECF4A8", "#B0D46E", "#FCEF00", "#FDEE89", "#F8AC51", "#F29141", "#F40041", "#F652AB", "#697CFA", "#86A1FF", "#c8d7f7"])
@@ -40,7 +41,7 @@ class DrawSys(object):
                   format(int(np.sum(historyThunder))), 
                   fontsize=self.fontsize, 
                   zorder=3, loc="left")
-        plt.title("{} to {}".\
+        plt.title("JJA from {} to {}".\
                   format(validDateOpt[0].year, validDateOpt[-1].year), 
                   fontsize=self.fontsize, 
                   zorder=3, loc="right")
@@ -72,7 +73,7 @@ if __name__ == "__main__":
     exampeNCdata = nc.Dataset(config["CGFreqDir"] + "199005.nc")
     xlon, xlat = exampeNCdata["XLON"], exampeNCdata["XLAT"]
     historyThunder = np.zeros(shape=np.array(xlon).shape)
-    monthOpt = [x for x in range(1, 13)]
+    monthOpt = [6, 7, 8]#[x for x in range(1, 13)]
 
     validDateOpt = []
     for date in dateRange:
