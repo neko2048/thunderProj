@@ -51,7 +51,7 @@ if __name__ == "__main__":
         else:
             continue
 
-        condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData != 0) * (taiwanMask3D), dtype=bool)
+        condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D), dtype=bool)
         x = np.log10(csData[condition])
         y = thdData[condition]
         c = dBZData[condition]
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
     xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
     ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
-    xticks([-20, -15, -10, -5, 0, 1, 2], fontsize=15)
+    xticks([x for x in range(-7, 3)], fontsize=15)
     yticks(fontsize=15)
     xlim(right=2)
     cbar = colorbar(extend="max")
