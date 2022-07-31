@@ -15,8 +15,17 @@ class ThunderRegrider(object):
         self.thdFileDir = thdFileDir
 
     def getDataset(self, year, month):
-        data = pd.read_csv(self.thdFileDir)
-        data.columns = ["time", "nanosec", "lat", "lon", "strength", "type"]
+        try:
+            data = pd.read_csv(self.thdFileDir)#, encoding="unicode_escape")
+        except UnicodeDecodeError:
+            data = pd.read_csv(self.thdFileDir, encoding="unicode_escape") # for data not uniformed e.g. 201907 201010...
+
+        try:
+            data.columns = ["time", "nanosec", "lat", "lon", "strength", "type"]
+        except ValueError: # for data not uniformed e.g. 201010
+            data = pd.read_csv(self.thdFileDir, encoding="unicode_escape", sep="\t")
+            data.columns = ["time", "nanosec", "lat", "lon", "strength", "type"]
+
         if "　" in data.time[0]: # space in the 'time' columne in the data after 2017/01/01
             data.time = [x[2:] for x in data.time]
 
@@ -80,7 +89,7 @@ class NCwriter(object):
 
 
 if __name__ ==  "__main__":
-    hourType = 1
+    hourType = 3
     config = Config({
         "hourType": str(hourType), 
         "wrfDir": "../dat/CFSR-WRF/CS/", 
@@ -90,7 +99,7 @@ if __name__ ==  "__main__":
 
     ncWriter = NCwriter(outputDir=config["outputDir"])
     #dateRange = pd.date_range("1989-01-01", end="2022-01-01", freq="1MS")
-    dateRange = pd.date_range("2019-06-01", end="2022-01-01", freq="1MS")
+    dateRange = pd.date_range("2019-07-01", end="2022-01-01", freq="1MS")
     #dateRange = pd.date_range("1989-01-01", end="1989-05-01", freq="1MS")
 
     initWRFfileDir = config["wrfDir"] + "CS-198003.nc"

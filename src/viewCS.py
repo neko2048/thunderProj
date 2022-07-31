@@ -64,7 +64,7 @@ if __name__ == "__main__":
         }
 
     #dateRange = pd.date_range("1980-03-01", end="2010-11-01", freq="1m")
-    dateRange = pd.date_range("1980-04-01", end="1985-05-01", freq="1m")
+    dateRange = pd.date_range("2010-09-01", end="2010-10-01", freq="1MS")
     threshold = 1
     for date in dateRange:
         dataDir = config["dir"] + "{YEAR}{MONTH:02d}.nc".\
@@ -74,5 +74,5 @@ if __name__ == "__main__":
         else:
             continue
         drawSys = DrawSys(config["outputDir"])
-        drawSys.drawFreqMap(data, 30)
+        drawSys.drawFreqMap(data, 1)
 

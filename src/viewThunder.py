@@ -53,7 +53,7 @@ class DrawSys(object):
             ax.set_xticks([np.ceil(x) for x in np.arange(np.min(xlat), np.max(xlat), 1)])
             ax.set_yticks([round(x, 1) for x in np.arange(np.min(xlon), np.max(xlon), 1)])
             ax.coastlines(resolution="10m")
-            plt.savefig(self.outputDir + "{}_{:02d}.jpg".format(time[i], np.sum(freq[i])), dpi=250)
+            plt.savefig(self.outputDir + "{}_{:02d}TH.jpg".format(time[i], np.sum(freq[i])), dpi=250)
             plt.clf()
             print("Save Fig {}.jpg".format(time[i]))
 
@@ -61,12 +61,12 @@ if __name__ == "__main__":
     hourType = 1
     config = {
         "hourType": str(hourType), 
-        "CGFreqDir": "../dat/TDFRQ_{HT}HR_test/".format(HT=hourType), 
-        "outputDir": "../fig/TDFRQ_{HT}HR/".format(HT=hourType), 
+        "CGFreqDir": "../dat/TDFRQ_{HT}HRfull/".format(HT=hourType), 
+        "outputDir": "./"#"../fig/TDFRQ_{HT}HR/".format(HT=hourType), 
         }
 
     #dateRange = pd.date_range("1980-03-01", end="2010-11-01", freq="1m")
-    dateRange = pd.date_range("1990-04-01", end="1990-05-01", freq="1m")
+    dateRange = pd.date_range("2010-09-01", end="2010-10-01", freq="1MS")
 
     for date in dateRange:
         dataDir = config["CGFreqDir"] + "{YEAR}{MONTH:02d}.nc".\
@@ -76,4 +76,4 @@ if __name__ == "__main__":
         else:
             continue
         drawSys = DrawSys(config["outputDir"])
-        drawSys.drawFreqMap(data, 1)
+        drawSys.drawFreqMap(data, 10)
