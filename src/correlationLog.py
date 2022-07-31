@@ -18,7 +18,7 @@ if __name__ == "__main__":
         "home": "/home/twsand/fskao/thunderProj/", 
         "hourType": str(hourType), 
         "wrfDir": "%(home)sdat/CFSR-WRF/CS/", 
-        "thdDir": "%(home)sdat/TDFRQ_%(hourType)sHRfull/",
+        "thdDir": "%(home)sdat/TDFRQ_%(hourType)sHR_UTC0/",
         "csJsonDir": "%(home)sdat/varJson/CS.json", 
         "dBZJsonDir": "%(home)sdat/varJson/dBZ_max.json", 
         "taiwanMaskDir": "%(home)sdat/taiwanMask.npy", 

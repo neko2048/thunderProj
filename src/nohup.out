@@ -1,0 +1,95 @@
+========== 201907 EXISTS ==========
+Traceback (most recent call last):
+  File "fullDateThunderGrid.py", line 145, in <module>
+    freqArr = freqArr)
+  File "fullDateThunderGrid.py", line 69, in writeNC
+    ds = nc.Dataset(ncOutputName, 'w', format='NETCDF4')
+  File "src/netCDF4/_netCDF4.pyx", line 2307, in netCDF4._netCDF4.Dataset.__init__
+  File "src/netCDF4/_netCDF4.pyx", line 1925, in netCDF4._netCDF4._ensure_nc_success
+PermissionError: [Errno 13] Permission denied: b'../dat/TDFRQ_3HR_UCT0/201907.nc'
+========== 198906 EXISTS ==========
+    -> File Exists
+========== 198907 EXISTS ==========
+    -> File Exists
+========== 198908 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/198908.nc WRITEN
+========== 198909 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/198909.nc WRITEN
+========== 198910 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/198910.nc WRITEN
+========== 198911 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/198911.nc WRITEN
+========== 198912 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/198912.nc WRITEN
+========== 199001 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/199001.nc WRITEN
+========== 199002 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/199002.nc WRITEN
+========== 199003 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/199003.nc WRITEN
+========== 199004 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/199004.nc WRITEN
+========== 199005 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/199005.nc WRITEN
+========== 199006 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/199006.nc WRITEN
+========== 199007 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/199007.nc WRITEN
+========== 199008 EXISTS ==========
+    -> ../dat/TDFRQ_3HR_UTC0/199008.nc WRITEN
+========== 199009 EXISTS ==========
+Traceback (most recent call last):
+  File "fullDateThunderGrid.py", line 143, in <module>
+    thunderType = "CG")
+  File "fullDateThunderGrid.py", line 55, in getFreq
+    selectThunderData = self.getPeriodData(lowTimeBound, highTimeBound, thunderType)
+  File "fullDateThunderGrid.py", line 40, in getPeriodData
+    lowData = self.getDataset(lowBoundDate.year, lowBoundDate.month)
+  File "fullDateThunderGrid.py", line 31, in getDataset
+    if "　" in data.time[0]: # space in the 'time' columne in the data after 2017/01/01
+  File "/home/twsand/lingwhai/envs/fskao/lib/python3.7/site-packages/pandas/core/series.py", line 939, in __getitem__
+    return self._values[key]
+IndexError: index 0 is out of bounds for axis 0 with size 0
+========== 198906 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/198906.nc WRITEN
+========== 198907 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/198907.nc WRITEN
+========== 198908 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/198908.nc WRITEN
+========== 198909 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/198909.nc WRITEN
+========== 198910 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/198910.nc WRITEN
+========== 198911 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/198911.nc WRITEN
+========== 198912 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/198912.nc WRITEN
+========== 199001 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/199001.nc WRITEN
+========== 199002 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/199002.nc WRITEN
+========== 199003 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/199003.nc WRITEN
+========== 199004 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/199004.nc WRITEN
+========== 199005 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/199005.nc WRITEN
+========== 199006 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/199006.nc WRITEN
+========== 199007 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/199007.nc WRITEN
+========== 199008 EXISTS ==========
+    -> ../dat/TDFRQ_1HR_UTC0/199008.nc WRITEN
+========== 199009 EXISTS ==========
+Traceback (most recent call last):
+  File "fullDateThunderGrid.py", line 143, in <module>
+    thunderType = "CG")
+  File "fullDateThunderGrid.py", line 55, in getFreq
+    selectThunderData = self.getPeriodData(lowTimeBound, highTimeBound, thunderType)
+  File "fullDateThunderGrid.py", line 40, in getPeriodData
+    lowData = self.getDataset(lowBoundDate.year, lowBoundDate.month)
+  File "fullDateThunderGrid.py", line 31, in getDataset
+    if "　" in data.time[0]: # space in the 'time' columne in the data after 2017/01/01
+  File "/home/twsand/lingwhai/envs/fskao/lib/python3.7/site-packages/pandas/core/series.py", line 939, in __getitem__
+    return self._values[key]
+IndexError: index 0 is out of bounds for axis 0 with size 0

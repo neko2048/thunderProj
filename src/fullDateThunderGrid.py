@@ -19,17 +19,21 @@ class ThunderRegrider(object):
             data = pd.read_csv(self.thdFileDir)#, encoding="unicode_escape")
         except UnicodeDecodeError:
             data = pd.read_csv(self.thdFileDir, encoding="unicode_escape") # for data not uniformed e.g. 201907 201010...
+            print("Use unicode_escape encoding")
 
         try:
             data.columns = ["time", "nanosec", "lat", "lon", "strength", "type"]
         except ValueError: # for data not uniformed e.g. 201010
+            print("Detect changed data type")
             data = pd.read_csv(self.thdFileDir, encoding="unicode_escape", sep="\t")
             data.columns = ["time", "nanosec", "lat", "lon", "strength", "type"]
 
-        if "　" in data.time[0]: # space in the 'time' columne in the data after 2017/01/01
+
+        if len(data.time) != 0 and "　" in data.time[0]: # space in the 'time' columne in the data after 2017/01/01
+            print("Detect Bad Char.")
             data.time = [x[2:] for x in data.time]
 
-        data.time = pd.to_datetime(data.time, format="%Y/%m/%d %H:%M")
+        data.time = pd.to_datetime(data.time, format="%Y/%m/%d %H:%M") - pd.Timedelta(8, "hr")
         return data
 
     def getPeriodData(self, lowBoundDate, highBoundDate, thunderType="CG"):
@@ -94,12 +98,12 @@ if __name__ ==  "__main__":
         "hourType": str(hourType), 
         "wrfDir": "../dat/CFSR-WRF/CS/", 
         "thdDir": "../dat/TLDS/",
-        "outputDir": "../dat/TDFRQ_%(hourType)sHRfull/", 
+        "outputDir": "../dat/TDFRQ_%(hourType)sHR_UTC0/", 
         })
 
     ncWriter = NCwriter(outputDir=config["outputDir"])
-    #dateRange = pd.date_range("1989-01-01", end="2022-01-01", freq="1MS")
-    dateRange = pd.date_range("2019-07-01", end="2022-01-01", freq="1MS")
+    dateRange = pd.date_range("1989-06-01", end="2022-01-01", freq="1MS")
+    #dateRange = pd.date_range("2019-07-01", end="2022-01-01", freq="1MS")
     #dateRange = pd.date_range("1989-01-01", end="1989-05-01", freq="1MS")
 
     initWRFfileDir = config["wrfDir"] + "CS-198003.nc"
