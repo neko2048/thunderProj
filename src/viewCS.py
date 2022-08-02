@@ -74,5 +74,5 @@ if __name__ == "__main__":
         else:
             continue
         drawSys = DrawSys(config["outputDir"])
-        drawSys.drawFreqMap(data, 1)
+        drawSys.drawFreqMap(data, 10)
 

@@ -8,10 +8,10 @@ if __name__ == "__main__":
     hourType = 3
     config = Config({
         "home": "/home/twsand/fskao/thunderProj/", 
-        "dBZthreshold": "37", 
+        "dBZthreshold": "40", 
         "hourType": str(hourType), 
         "txtDataDir": "%(home)sdat/txtDat/", 
-        "sepDateTime": "2008-01-01", 
+        "sepDateTime": "2009-01-01", 
         "txtOutputDir": "%(home)sdat/txtDat/", 
         })
 

@@ -51,7 +51,7 @@ if __name__ == "__main__":
         else:
             continue
 
-        condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D), dtype=bool)
+        condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 0) * (taiwanMask3D), dtype=bool)
         x = np.log10(csData[condition])
         y = thdData[condition]
         c = dBZData[condition]
