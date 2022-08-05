@@ -2,6 +2,8 @@
 *.nc
 *.txt
 *.TXT
+*.csv
+*.zip
 loginGit.sh
 .gitignore
 .*
