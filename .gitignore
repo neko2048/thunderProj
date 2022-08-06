@@ -4,6 +4,7 @@
 *.TXT
 *.csv
 *.zip
+*.npy
 loginGit.sh
 .gitignore
 .*
