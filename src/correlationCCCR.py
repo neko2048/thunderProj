@@ -20,7 +20,7 @@ class TxtOutputer(object):
         return None
 
 if __name__ == "__main__":
-    hourType, dBZthreshold = 1, 40#input().split()
+    hourType, dBZthreshold = input().split()
     hourType = int(hourType)
     dBZthreshold = int(dBZthreshold)
 
@@ -30,6 +30,8 @@ if __name__ == "__main__":
         "wrfDir": "%(home)sdat/CFSR-WRF/CS/", 
         "thdDir": "%(home)sdat/TDFRQ_%(hourType)sHR_UTC0/",
         "csJsonDir": "%(home)sdat/varJson/CS.json", 
+        "ccJsonDir": "%(home)sdat/varJson/CC.json", 
+        "crJsonDir": "%(home)sdat/varJson/CR.json",
         "dBZJsonDir": "%(home)sdat/varJson/dBZ_max.json", 
         "taiwanMaskDir": "%(home)sdat/taiwanMask.npy", 
         "txtOutputDir": "%(home)sdat/txtDat/"
@@ -37,6 +39,8 @@ if __name__ == "__main__":
 
     txtOutputer = TxtOutputer(config["txtOutputDir"])
     csConfig = json.load(open(config["csJsonDir"]))
+    crConfig = json.load(open(config["crJsonDir"]))
+    ccConfig = json.load(open(config["ccJsonDir"]))
     dBZConfig = json.load(open(config["dBZJsonDir"]))
     taiwanMask = np.load(config["taiwanMaskDir"])
     monthOpt = [6, 7, 8]
@@ -61,6 +65,8 @@ if __name__ == "__main__":
             dateData = np.array(nc.Dataset(config["thdDir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))["time"])
             thdData = np.array(nc.Dataset(config["thdDir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))["CGFRQ"])
             csData = np.array(nc.Dataset(csConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[csConfig["varName"]])
+            ccData = np.array(nc.Dataset(ccConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[ccConfig["varName"]])
+            crData = np.array(nc.Dataset(crConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[crConfig["varName"]])
             dBZData = np.array(nc.Dataset(dBZConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[dBZConfig["varName"]])
             taiwanMask3D = np.tile(taiwanMask[np.newaxis, :, :], reps=[dBZData.shape[0] ,1, 1])
             dateData3D = np.tile(dateData[:, np.newaxis, np.newaxis], reps=[1, thdData.shape[1], thdData.shape[2]])
@@ -69,7 +75,7 @@ if __name__ == "__main__":
             continue
 
         condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D), dtype=bool)
-        x = csData[condition]
+        x = (ccData + crData)[condition] #csData[condition]
         y = thdData[condition]
         c = dBZData[condition]
         t = dateData3D[condition]
@@ -87,10 +93,10 @@ if __name__ == "__main__":
     lreg = stats.linregress(x=validX, y=validY)
     print("Printing")
     plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
-    title("Correlation of {X} and {Y} ".format(X=csConfig["varName"], Y="CG"), fontsize=25, y=1.075)
+    title("Correlation of {X} and {Y} ".format(X="LWP", Y="CG"), fontsize=25, y=1.075)
     title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
     title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
-    xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
+    xlabel("{} [{}]".format("LWP", csConfig["unit"]), fontsize=15)
     ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
     xticks(fontsize=15)
     yticks(fontsize=15)

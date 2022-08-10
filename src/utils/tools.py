@@ -28,7 +28,7 @@ class ThunderRegrider(object):
             print("Detect Bad Char.")
             data.time = [x[2:] for x in data.time]
 
-        data.time = pd.to_datetime(data.time, format="%Y/%m/%d %H:%M") - pd.Timedelta(8, "hr")
+        data.time = pd.to_datetime(data.time, format="%Y/%m/%d %H:%M")# - pd.Timedelta(8, "hr")
         return data
 
     def getPeriodData(self, lowBoundDate, highBoundDate, thunderType="CG"):

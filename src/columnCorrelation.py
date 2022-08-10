@@ -1,23 +1,11 @@
 import numpy as np
 import netCDF4 as nc
 import pandas as pd
-from matplotlib.pyplot import *
 from os import path
 from scipy import stats
 import json
-import seaborn as sns
-from countyJudge import CountyJudger
+import pickle
 from fullDateThunderGrid import Config
-
-class TxtOutputer(object):
-    def __init__(self, outputDir):
-        self.outputDir = outputDir
-
-    def saveData(self, var, fileName):
-        fileDir = self.outputDir + fileName + ".txt"
-        np.savetxt(fileDir, var)
-        print("Save to: {}".format(fileDir))
-        return None
 
 if __name__ == "__main__":
     hourType, dBZthreshold = 1, 40#input().split()
@@ -32,10 +20,10 @@ if __name__ == "__main__":
         "csJsonDir": "%(home)sdat/varJson/CS.json", 
         "dBZJsonDir": "%(home)sdat/varJson/dBZ_max.json", 
         "taiwanMaskDir": "%(home)sdat/taiwanMask.npy", 
-        "txtOutputDir": "%(home)sdat/txtDat/"
+        "columnDataOutputDir": "%(home)sdat/columnData/", 
         })
 
-    txtOutputer = TxtOutputer(config["txtOutputDir"])
+    #txtOutputer = TxtOutputer(config["txtOutputDir"])
     csConfig = json.load(open(config["csJsonDir"]))
     dBZConfig = json.load(open(config["dBZJsonDir"]))
     taiwanMask = np.load(config["taiwanMaskDir"])
@@ -49,12 +37,16 @@ if __name__ == "__main__":
         else:
             continue
 
-    validX = []
-    validY = []
-    validC = []
-    validT = []
+    validXMapDict = {}
+    validYMapDict = {}
+    coeffSlope = np.full(fill_value = np.nan, shape=taiwanMask.shape)
+    coeffIntercept = np.full(fill_value = np.nan, shape=taiwanMask.shape)
+    coeffCorr = np.full(fill_value = np.nan, shape=taiwanMask.shape)
+    for i in range(taiwanMask.shape[0]):
+        for j in range(taiwanMask.shape[1]):
+            validXMapDict["{:03d}{:03d}".format(i, j)] = []
+            validYMapDict["{:03d}{:03d}".format(i, j)] = []
 
-    figure(figsize=(10, 10), dpi=250)
     for date in existDateOpt:
         if date.month in monthOpt:
             print(date)
@@ -69,37 +61,33 @@ if __name__ == "__main__":
             continue
 
         condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D), dtype=bool)
-        x = csData[condition]
-        y = thdData[condition]
-        c = dBZData[condition]
-        t = dateData3D[condition]
+        
 
         if np.sum(condition != 0):
-            validX.extend(x)
-            validY.extend(y)
-            validC.extend(c)
-            validT.extend(t)
-        scatter(x, y, c=c, \
-                cmap="rainbow", vmin=35, vmax=40, edgecolor="white", \
-                linewidths=0.5, s=60)
+            conditionIdx = np.where(condition)
+            for t in range(np.sum(condition)):
+                validXMapDict["{:03d}{:03d}".format(conditionIdx[1][t], conditionIdx[2][t])].append(csData[conditionIdx[0][t], conditionIdx[1][t], conditionIdx[2][t]])
+                validYMapDict["{:03d}{:03d}".format(conditionIdx[1][t], conditionIdx[2][t])].append(thdData[conditionIdx[0][t], conditionIdx[1][t], conditionIdx[2][t]])
 
-    print("Calculate Linear Regression")
-    lreg = stats.linregress(x=validX, y=validY)
-    print("Printing")
-    plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
-    title("Correlation of {X} and {Y} ".format(X=csConfig["varName"], Y="CG"), fontsize=25, y=1.075)
-    title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
-    title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
-    xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
-    ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
-    xticks(fontsize=15)
-    yticks(fontsize=15)
-    ylim(bottom=0)
-    cbar = colorbar(extend="max")
-    cbar.set_label("Reflectivity [dBZ]")
-    savefig("CG{}_dBZ{}.jpg".format(hourType, dBZthreshold))
-    clf()
-    #txtOutputer.saveData(var=validX, fileName="csData_Hr{}Thres{}".format(hourType, dBZthreshold))
-    #txtOutputer.saveData(var=validY, fileName="thData_Hr{}Thres{}".format(hourType, dBZthreshold))
-    #txtOutputer.saveData(var=validC, fileName="dBZData_Hr{}Thres{}".format(hourType, dBZthreshold))
-    #txtOutputer.saveData(var=validT, fileName="dateData_Hr{}Thres{}".format(hourType, dBZthreshold))
+    for i in range(taiwanMask.shape[0]):
+        for j in range(taiwanMask.shape[1]):
+            if len(validXMapDict["{:03d}{:03d}".format(i, j)]) >= 2:
+                #print(validXMapDict["{:03d}{:03d}".format(i, j)])
+                #print(validYMapDict["{:03d}{:03d}".format(i, j)])
+                lreg = stats.linregress(x=validXMapDict["{:03d}{:03d}".format(i, j)], \
+                                        y=validYMapDict["{:03d}{:03d}".format(i, j)])
+                coeffSlope[i, j] = lreg.slope
+                coeffIntercept[i, j] = lreg.intercept
+                coeffCorr[i, j] = lreg.rvalue
+    np.save(config["columnDataOutputDir"] + "coeffCorr{}.npy".format(hourType), coeffCorr)
+    np.save(config["columnDataOutputDir"] + "coeffSlope{}.npy".format(hourType), coeffSlope)
+    np.save(config["columnDataOutputDir"] + "coeffIntercept{}.npy".format(hourType), coeffIntercept)
+
+
+    file = open(config["columnDataOutputDir"] + "validX_hourType{}.pkl".format(hourType), "wb")
+    pickle.dump(validXMapDict, file)
+    file.close()
+
+    file = open(config["columnDataOutputDir"] + "validY_hourType{}.pkl".format(hourType), "wb")
+    pickle.dump(validYMapDict, file)
+    file.close()
