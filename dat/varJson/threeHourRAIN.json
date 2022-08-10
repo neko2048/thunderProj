@@ -1,0 +1,6 @@
+{
+	"varName": "RAIN",
+	"dir": "/home/twsand/fskao/thunderProj/dat/CFSR-WRF-new/RAIN-modify/threeHourRAIN/",
+	"unit": "mm",
+	"description": "Past Three Hour Accumulative Precpitation"
+}
