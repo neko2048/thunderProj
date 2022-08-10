@@ -35,9 +35,15 @@ if __name__ == "__main__":
         "txtOutputDir": "%(home)sdat/txtDat/"
         })
 
+    if hourType == 1:
+        config["rainJsonDir"] = config["home"] + "dat/varJson/oneHourMidRAIN.json"
+    elif hourType == 3:
+        config["rainJsonDir"] = config["home"] + "dat/varJson/threeHourMidRAIN.json"
+
     txtOutputer = TxtOutputer(config["txtOutputDir"])
     csConfig = json.load(open(config["csJsonDir"]))
     dBZConfig = json.load(open(config["dBZJsonDir"]))
+    rainConfig = json.load(open(config["rainJsonDir"]))
     taiwanMask = np.load(config["taiwanMaskDir"])
     monthOpt = [6, 7, 8]
     dateOpt = pd.date_range("1989-01-01", end="2008-12-01", freq="1MS")
@@ -62,6 +68,7 @@ if __name__ == "__main__":
             thdData = np.array(nc.Dataset(config["thdDir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))["CGFRQ"])
             csData = np.array(nc.Dataset(csConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[csConfig["varName"]])
             dBZData = np.array(nc.Dataset(dBZConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[dBZConfig["varName"]])
+            rainData = np.array(nc.Dataset(rainConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[rainConfig["varName"]])
             taiwanMask3D = np.tile(taiwanMask[np.newaxis, :, :], reps=[dBZData.shape[0] ,1, 1])
             dateData3D = np.tile(dateData[:, np.newaxis, np.newaxis], reps=[1, thdData.shape[1], thdData.shape[2]])
 
@@ -69,7 +76,7 @@ if __name__ == "__main__":
             continue
 
         condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D), dtype=bool)
-        x = csData[condition]
+        x = rainData[condition]
         y = thdData[condition]
         c = dBZData[condition]
         t = dateData3D[condition]
@@ -87,10 +94,10 @@ if __name__ == "__main__":
     lreg = stats.linregress(x=validX, y=validY)
     print("Printing")
     plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
-    title("Correlation of {X} and {Y} ".format(X=csConfig["varName"], Y="CG"), fontsize=25, y=1.075)
+    title("Correlation of {X} and {Y} ".format(X=rainConfig["varName"], Y="CG"), fontsize=25, y=1.075)
     title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
     title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
-    xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
+    xlabel("{} [{}]".format(csConfig["description"], rainConfig["unit"]), fontsize=15)
     ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
     xticks(fontsize=15)
     yticks(fontsize=15)

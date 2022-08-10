@@ -1,0 +1,6 @@
+{
+	"varName": "RAIN",
+	"dir": "/home/twsand/fskao/thunderProj/dat/CFSR-WRF-new/RAIN-modify/oneHourMidRAIN/",
+	"unit": "mm",
+	"description": "Precpitation within pass/future 0.5 hours"
+}
