@@ -8,7 +8,7 @@ import pickle
 from fullDateThunderGrid import Config
 
 if __name__ == "__main__":
-    hourType, dBZthreshold = 1, 40#input().split()
+    hourType, dBZthreshold = 3, 35#input().split()
     hourType = int(hourType)
     dBZthreshold = int(dBZthreshold)
 
@@ -72,8 +72,6 @@ if __name__ == "__main__":
     for i in range(taiwanMask.shape[0]):
         for j in range(taiwanMask.shape[1]):
             if len(validXMapDict["{:03d}{:03d}".format(i, j)]) >= 2:
-                #print(validXMapDict["{:03d}{:03d}".format(i, j)])
-                #print(validYMapDict["{:03d}{:03d}".format(i, j)])
                 lreg = stats.linregress(x=validXMapDict["{:03d}{:03d}".format(i, j)], \
                                         y=validYMapDict["{:03d}{:03d}".format(i, j)])
                 coeffSlope[i, j] = lreg.slope

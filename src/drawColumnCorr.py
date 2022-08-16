@@ -44,9 +44,9 @@ def drawCountMap(wrfData, data):
     
     fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"projection": ccrs.PlateCarree()}, dpi=250)
     ax.set_extent([np.min(xlon), np.max(xlon), np.min(xlat), np.max(xlat)])
-    FREQ = ax.pcolormesh(xlon, xlat, data, vmin=0, vmax=20, cmap="rainbow")
+    FREQ = ax.pcolormesh(xlon, xlat, data, vmin=0, vmax=30, cmap="rainbow")
     cbar = plt.colorbar(FREQ)
-    cbar.set_ticks([0, 5, 10, 15])
+    cbar.set_ticks([0, 5, 10, 15, 20, 25, 30])
     cbar.ax.tick_params(labelsize=15)
     plt.title("# of valid data", fontsize=20, y=1.05)
 
@@ -72,12 +72,12 @@ def drawScatter(x, y):
     plt.title("1989-2008 JJA", loc="right", fontsize=15)
     ax.set_xlabel("# of valid data / column", fontsize=20)
     ax.set_ylabel("Correlation", fontsize=20)
-    ax.set_xticks(np.arange(0, 15))
+    #ax.set_xticks(np.arange(0, 15))
     ax.tick_params(axis="both", labelsize=15)
     plt.savefig("colCountCorr.jpg", dpi=300)
     
 if __name__ == "__main__":
-    hourType = 1
+    hourType = 3
     config = Config({
         "home": "/home/twsand/fskao/thunderProj/", 
         "dBZJsonDir": "%(home)sdat/varJson/dBZ_max.json", 

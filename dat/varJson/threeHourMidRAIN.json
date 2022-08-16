@@ -2,5 +2,5 @@
 	"varName": "RAIN",
 	"dir": "/home/twsand/fskao/thunderProj/dat/CFSR-WRF-new/RAIN-modify/threeHourMidRAIN/",
 	"unit": "mm",
-	"description": "Precpitation within pass/future 1.5 hours"
+	"description": "Precpitation within 3 hour(s)"
 }
