@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 import netCDF4 as nc
+from scipy import stats
 import cartopy.crs as ccrs
 import  matplotlib.pyplot as plt
 from fullDateThunderGrid import Config
@@ -11,11 +12,7 @@ def readDict(dir, mode):
     file.close()
     return data
 
-def drawCorrMap(wrfData, data):
-    time = np.array(ncData["time"])
-    xlon = np.array(ncData["XLON"])
-    xlat = np.array(ncData["XLAT"])
-    
+def drawCorrMap(xlon, xlat, data):
     fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"projection": ccrs.PlateCarree()}, dpi=250)
     ax.set_extent([np.min(xlon), np.max(xlon), np.min(xlat), np.max(xlat)])
     FREQ = ax.pcolormesh(xlon, xlat, data, vmin=-1, vmax=1, cmap="rainbow")
@@ -24,6 +21,7 @@ def drawCorrMap(wrfData, data):
     plt.title("Correlation", fontsize=20, y=1.05)
     
     plt.title("1989-2008 JJA", loc="right", fontsize=15)
+    plt.title(r"hourType={} | dBZmax$\geq${}".format(hourType, dBZthres), loc="left", fontsize=15)
     ax.set_xlim(119, 122.9)
     ax.set_xlabel("Longitude", fontsize=20)
     ax.set_ylabel("Latitude", fontsize=20)
@@ -37,11 +35,7 @@ def drawCorrMap(wrfData, data):
     plt.savefig("colCorrelation.jpg", dpi=250)
     plt.clf()
 
-def drawCountMap(wrfData, data):
-    time = np.array(ncData["time"])
-    xlon = np.array(ncData["XLON"])
-    xlat = np.array(ncData["XLAT"])
-    
+def drawCountMap(xlon, xlat, data):
     fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"projection": ccrs.PlateCarree()}, dpi=250)
     ax.set_extent([np.min(xlon), np.max(xlon), np.min(xlat), np.max(xlat)])
     FREQ = ax.pcolormesh(xlon, xlat, data, vmin=0, vmax=30, cmap="rainbow")
@@ -51,6 +45,7 @@ def drawCountMap(wrfData, data):
     plt.title("# of valid data", fontsize=20, y=1.05)
 
     plt.title("1989-2008 JJA", loc="right", fontsize=15)
+    plt.title(r"hourType={} | dBZmax$\geq${}".format(hourType, dBZthres), loc="left", fontsize=15)
     ax.set_xlim(119, 122.9)
     ax.set_xlabel("Longitude", fontsize=20)
     ax.set_ylabel("Latitude", fontsize=20)
@@ -70,6 +65,7 @@ def drawScatter(x, y):
         plt.scatter(x[i, :], y[i, :], color="black")
 
     plt.title("1989-2008 JJA", loc="right", fontsize=15)
+    plt.title(r"hourType={} | dBZmax$\geq${}".format(hourType, dBZthres), loc="left", fontsize=15)
     ax.set_xlabel("# of valid data / column", fontsize=20)
     ax.set_ylabel("Correlation", fontsize=20)
     #ax.set_xticks(np.arange(0, 15))
@@ -77,7 +73,8 @@ def drawScatter(x, y):
     plt.savefig("colCountCorr.jpg", dpi=300)
     
 if __name__ == "__main__":
-    hourType = 3
+    hourType, dBZthres = 3, 40
+    lengthScale = 3
     config = Config({
         "home": "/home/twsand/fskao/thunderProj/", 
         "dBZJsonDir": "%(home)sdat/varJson/dBZ_max.json", 
@@ -86,17 +83,45 @@ if __name__ == "__main__":
         "wrfExampleDir": "%(home)sdat/CFSR-WRF/CS/CS-"
         })
 
-    validX = readDict(config["columnDataDir"] + "validX_hourType{}.pkl".format(hourType), "rb")
-    validY = readDict(config["columnDataDir"] + "validY_hourType{}.pkl".format(hourType), "rb")
-    correlation = np.load(config["columnDataDir"] + "coeffCorr{}.npy".format(hourType))
+    validX = readDict(config["columnDataDir"] + "validX_hourType{}_dBZ{}.pkl".format(hourType, dBZthres), "rb")
+    validY = readDict(config["columnDataDir"] + "validY_hourType{}_dBZ{}.pkl".format(hourType, dBZthres), "rb")
+    correlation = np.load(config["columnDataDir"] + "coeffCorr{}_dBZ{}.npy".format(hourType, dBZthres))
     ncData = nc.Dataset(config["wrfExampleDir"] + "201005.nc")
-    countMap = np.zeros(correlation.shape)
+    countMap = np.full((correlation.shape[0]//lengthScale, correlation.shape[1]//lengthScale), np.nan)
+    scaleCorr = np.full(countMap.shape, np.nan)
+
+    compressValidX = {}
+    compressValidY = {}
+
+    for i in range(len(correlation)):
+        for j in range(len(correlation)):
+            compressValidX["{:03d}{:03d}".format(i//2, j//2)] = []
+            compressValidY["{:03d}{:03d}".format(i//2, j//2)] = []
+
+    for i in range(correlation.shape[0]):
+        for j in range(correlation.shape[1]):
+            if len(validX["{:03d}{:03d}".format(i, j)]):
+                compressValidX["{:03d}{:03d}".format(i//lengthScale, j//lengthScale)].extend(validX["{:03d}{:03d}".format(i, j)])
+                compressValidY["{:03d}{:03d}".format(i//lengthScale, j//lengthScale)].extend(validY["{:03d}{:03d}".format(i, j)])
+
 
     for i in range(countMap.shape[0]):
         for j in range(countMap.shape[1]):
-            countMap[i, j] = len(validX["{:03d}{:03d}".format(i, j)])
+            if len(compressValidX["{:03d}{:03d}".format(i, j)]):
+                lreg = stats.linregress(x=compressValidX["{:03d}{:03d}".format(i, j)], \
+                                        y=compressValidY["{:03d}{:03d}".format(i, j)])
+                scaleCorr[i, j] = lreg.rvalue
+                countMap[i, j] = len(compressValidY["{:03d}{:03d}".format(i, j)])
 
+    xlon = np.array(ncData["XLON"])
+    xlat = np.array(ncData["XLAT"])
+    scaleXLON = np.zeros(countMap.shape)
+    scaleXLAT = np.zeros(countMap.shape)
+    for i in range(countMap.shape[0]):
+        for j in range(countMap.shape[1]):
+            scaleXLON[i, j] = np.mean(xlon[lengthScale*i:lengthScale*i+lengthScale, lengthScale*j:lengthScale*j+lengthScale])
+            scaleXLAT[i, j] = np.mean(xlat[lengthScale*i:lengthScale*i+lengthScale, lengthScale*j:lengthScale*j+lengthScale])
 
-    drawCorrMap(ncData, correlation)
-    drawCountMap(ncData, countMap)
-    drawScatter(countMap, correlation)
+    drawCorrMap(scaleXLON, scaleXLAT, scaleCorr)
+    drawCountMap(scaleXLON, scaleXLAT, countMap)
+    drawScatter(countMap, scaleCorr)

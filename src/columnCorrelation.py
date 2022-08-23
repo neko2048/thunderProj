@@ -8,7 +8,7 @@ import pickle
 from fullDateThunderGrid import Config
 
 if __name__ == "__main__":
-    hourType, dBZthreshold = 3, 35#input().split()
+    hourType, dBZthreshold = 3, 40#input().split()
     hourType = int(hourType)
     dBZthreshold = int(dBZthreshold)
 
@@ -56,12 +56,10 @@ if __name__ == "__main__":
             dBZData = np.array(nc.Dataset(dBZConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[dBZConfig["varName"]])
             taiwanMask3D = np.tile(taiwanMask[np.newaxis, :, :], reps=[dBZData.shape[0] ,1, 1])
             dateData3D = np.tile(dateData[:, np.newaxis, np.newaxis], reps=[1, thdData.shape[1], thdData.shape[2]])
-
         else:
             continue
 
         condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D), dtype=bool)
-        
 
         if np.sum(condition != 0):
             conditionIdx = np.where(condition)
@@ -77,15 +75,15 @@ if __name__ == "__main__":
                 coeffSlope[i, j] = lreg.slope
                 coeffIntercept[i, j] = lreg.intercept
                 coeffCorr[i, j] = lreg.rvalue
-    np.save(config["columnDataOutputDir"] + "coeffCorr{}.npy".format(hourType), coeffCorr)
-    np.save(config["columnDataOutputDir"] + "coeffSlope{}.npy".format(hourType), coeffSlope)
-    np.save(config["columnDataOutputDir"] + "coeffIntercept{}.npy".format(hourType), coeffIntercept)
+    np.save(config["columnDataOutputDir"] + "coeffCorr{}_dBZ{}.npy".format(hourType, dBZthreshold), coeffCorr)
+    np.save(config["columnDataOutputDir"] + "coeffSlope{}_dBZ{}.npy".format(hourType, dBZthreshold), coeffSlope)
+    np.save(config["columnDataOutputDir"] + "coeffIntercept{}_dBZ{}.npy".format(hourType, dBZthreshold), coeffIntercept)
 
 
-    file = open(config["columnDataOutputDir"] + "validX_hourType{}.pkl".format(hourType), "wb")
+    file = open(config["columnDataOutputDir"] + "validX_hourType{}_dBZ{}.pkl".format(hourType, dBZthreshold), "wb")
     pickle.dump(validXMapDict, file)
     file.close()
 
-    file = open(config["columnDataOutputDir"] + "validY_hourType{}.pkl".format(hourType), "wb")
+    file = open(config["columnDataOutputDir"] + "validY_hourType{}_dBZ{}.pkl".format(hourType, dBZthreshold), "wb")
     pickle.dump(validYMapDict, file)
     file.close()
