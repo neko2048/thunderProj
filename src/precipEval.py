@@ -52,16 +52,14 @@ if __name__ == "__main__":
     for dateIdx in range(len(existDateOpt))[:1]:
         wrfPrecipData = nc.Dataset(config["wrfPrecipDir"] + "{Y:04d}{M:02d}.nc".\
                                format(Y=existDateOpt[dateIdx].year, M=existDateOpt[dateIdx].month))
-        wrfDate = pd.to_datetime(np.array(wrfPrecipData["time"]), format="%Y%m%d%H") + pd.Timedelta(8, "hr")
         # turn wrf date to UTC + 8
+        wrfDate = pd.to_datetime(np.array(wrfPrecipData["time"]), format="%Y%m%d%H") + pd.Timedelta(8, "hr")
         wrfPrecip = wrfPrecipData["RAIN"]
 
 
         for day in (pd.date_range(wrfDate[0], wrfDate[-1], freq="1d")):
             dayObsPrecip = np.load(config["obsPrecipDir"] + "{:04d}/{:02d}{:02d}.npy".format(day.year, day.month, day.day))
             wrfCumPrecip = np.sum(wrfPrecip[np.logical_and(wrfDate.day == day.day, day.month == wrfDate.month)], axis=0)
-            print(wrfDate)
-            #print(wrfDate[np.logical_and(wrfDate.day == day, wrfDate.month == wrfDate[0].month)])
             scatter(dayObsPrecip, wrfCumPrecip, color="black")
         savefig("test.jpg", dpi=300)
 

@@ -8,7 +8,7 @@ from scipy import stats
 from fullDateThunderGrid import Config
 
 if __name__ == "__main__":
-    hourType, dBZthreshold = 1, 40#input().split()#3, 40
+    hourType, dBZthreshold = 1, 38#input().split()#3, 40
     hourType = int(hourType)
     dBZthreshold = int(dBZthreshold)
     config = Config({
@@ -80,9 +80,9 @@ if __name__ == "__main__":
         condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D) * validPrecip, dtype=bool)
         if np.sum(condition) == 0: continue
 
-        x = csData[condition]
+        x = wMaxData[condition]
         y = thdData[condition]
-        c = wMaxData[condition]
+        c = dBZData[condition]
         t = dateData3D[condition]
 
         if np.sum(condition != 0):
@@ -90,24 +90,23 @@ if __name__ == "__main__":
             validY.extend(y)
             validC.extend(c)
             validT.extend(t)
-        scatter(x, y, c=c, \
-                cmap="rainbow", edgecolor="white", vmin=0, vmax=10, \
-                linewidths=0.5, s=60)
+        scatter(x, y, c=c, linewidths=0.5, s=60, \
+                cmap="rainbow", edgecolor="white", vmin=35, vmax=40)
 
     print("Calculate Linear Regression")
     lreg = stats.linregress(x=validX, y=validY)
     print("Printing")
     plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
-    title("Correlation of {X} and {Y} ".format(X=csConfig["varName"], Y="CG"), fontsize=25, y=1.075)
+    title("Correlation of {X} and {Y} ".format(X=wMaxConfig["varName"], Y="CG"), fontsize=25, y=1.075)
     title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
     title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
-    xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
+    xlabel("{} [{}]".format(wMaxConfig["description"], wMaxConfig["unit"]), fontsize=15)
     ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
     xticks(fontsize=15)
     yticks(fontsize=15)
     ylim(bottom=0)
     cbar = colorbar(extend="max")
-    cbar.set_label("max W (m/s)")
+    cbar.set_label("Reflecitivity [dBZ]")
     savefig("CG{}_dBZ{}.jpg".format(hourType, dBZthreshold))
     clf()
 

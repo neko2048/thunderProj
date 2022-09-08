@@ -5,6 +5,7 @@ import pandas as pd
 import cartopy.crs as ccrs
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 from os import path
+from fullDateThunderGrid import Config
 
 class DrawSys(object):
     def __init__(self, outputDir):
@@ -60,20 +61,33 @@ class DrawSys(object):
         plt.clf()
         print("Save Fig historyThunder.jpg")
 
+
+    def drawHist(self, historyThunder):
+        plt.hist(historyThunder.flatten(), bins=np.arange(0.5, np.max(historyThunder)+0.5, 20))
+        plt.xlim(0, np.max(historyThunder)+0.5)
+        plt.xlabel("# of CG", fontsize=self.fontsize)
+        plt.ylabel("Frequency", fontsize=self.fontsize)
+        plt.savefig(self.outputDir + "thunderHist.jpg", dpi=250)
+
 if __name__ == "__main__":
     hourType = 3
-    config = {
+    config = Config({
+        "home": "/home/twsand/fskao/thunderProj/", 
         "hourType": str(hourType), 
         "CGFreqDir": "../dat/TDFRQ_{HT}HRfull/".format(HT=hourType), 
-        "outputDir": "./"#"../fig/TDFRQ_{HT}HR/".format(HT=hourType), 
-        }
+        "taiwanMaskDir": "%(home)sdat/taiwanMask.npy", 
+        "figOutputDir": "./", #"../fig/TDFRQ_{HT}HR/".format(HT=hourType), 
+        "freqMapDir": "%(home)sdat/freqMap.npy",
+        })
 
     dateRange = pd.date_range("1980-03-01", end="2018-12-01", freq="1MS")
     #dateRange = pd.date_range("2004-01-01", end="2012-12-01", freq="1MS")
     exampeNCdata = nc.Dataset(config["CGFreqDir"] + "199005.nc")
+    taiwanMask = np.load(config["taiwanMaskDir"])
+    
     xlon, xlat = exampeNCdata["XLON"], exampeNCdata["XLAT"]
     historyThunder = np.zeros(shape=np.array(xlon).shape)
-    monthOpt = [6, 7, 8]#[x for x in range(1, 13)]
+    monthOpt = [6, 7, 8]
 
     validDateOpt = []
     for date in dateRange:
@@ -86,6 +100,11 @@ if __name__ == "__main__":
         else:
             continue
 
+    np.save(config["freqMapDir"], historyThunder)
+
+    #historyThunder = taiwanMask * historyThunder
     validDateOpt = pd.to_datetime(validDateOpt)
-    drawSys = DrawSys(config["outputDir"])
+    drawSys = DrawSys(config["figOutputDir"])
     drawSys.drawFreqMap(historyThunder)
+    drawSys.drawHist(historyThunder)
+

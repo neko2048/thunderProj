@@ -20,7 +20,7 @@ class TxtOutputer(object):
         return None
 
 if __name__ == "__main__":
-    hourType, dBZthreshold = 1, 40#input().split()
+    hourType, dBZthreshold = 1, 38#input().split()
     hourType = int(hourType)
     dBZthreshold = int(dBZthreshold)
 

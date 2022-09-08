@@ -8,7 +8,8 @@ from scipy import stats
 from fullDateThunderGrid import Config
 
 if __name__ == "__main__":
-    hourType, dBZthreshold = 1, 40#input().split()#3, 40
+    hourType, dBZthreshold, prMin, prMax = 1, 40, 40, 70#input().split()#1, 38 #1, 40
+    prMin, prMax = int(prMin), int(prMax)
     hourType = int(hourType)
     dBZthreshold = int(dBZthreshold)
     config = Config({
@@ -20,6 +21,7 @@ if __name__ == "__main__":
         "csJsonDir": "%(home)sdat/varJson/CS.json", 
         "dBZJsonDir": "%(home)sdat/varJson/dBZ_max.json", 
         "taiwanMaskDir": "%(home)sdat/taiwanMask.npy", 
+        "freqMapDir": "%(home)sdat/freqMap.npy"
         })
 
     year = 1990
@@ -28,6 +30,7 @@ if __name__ == "__main__":
     dateOptEnd = pd.date_range("1989-01-01", end="2008-12-01", freq="1M")
     obsPrecipThres = 1 # mm
     taiwanMask = np.load(config["taiwanMaskDir"])
+    freqMap = np.load(config["freqMapDir"])
     csConfig = json.load(open(config["csJsonDir"]))
     dBZConfig = json.load(open(config["dBZJsonDir"]))
     
@@ -43,6 +46,14 @@ if __name__ == "__main__":
         else:
             continue
 
+
+    temp = freqMap[taiwanMask != 0]
+    if prMax != 100:
+        percentFilterMap = np.logical_and(freqMap >= np.percentile(temp, prMin), freqMap < np.percentile(temp, prMax))
+    else:
+        percentFilterMap = np.logical_and(freqMap >= np.percentile(temp, prMin), freqMap <= np.percentile(temp, prMax))
+
+
     validX = []
     validY = []
     validC = []
@@ -57,10 +68,6 @@ if __name__ == "__main__":
         wrfPrecip = wrfPrecipData["RAIN"]
 
         validPrecip = np.full(wrfPrecip.shape, False)
-        #for day in np.unique(wrfDate.day):
-        #    dayObsPrecip = np.load(config["obsPrecipDir"] + "{:04d}/{:02d}{:02d}.npy".format(wrfDate[0].year, wrfDate[0].month, day))
-        #    wrfCumPrecip = np.sum(wrfPrecip[np.logical_and(wrfDate.day == day, wrfDate.month == wrfDate[0].month)], axis=0)
-        #    print(wrfDate[np.logical_and(wrfDate.day == day, wrfDate.month == wrfDate[0].month)])
         for dayIdx in range(len(wrfDate)):
             dayObsPrecip = np.load(config["obsPrecipDir"] + "{:04d}/{:02d}{:02d}.npy".format(wrfDate[dayIdx].year, wrfDate[dayIdx].month, wrfDate[dayIdx].day))
             validPrecip[dayIdx][dayObsPrecip >= obsPrecipThres] = wrfPrecip[dayIdx][dayObsPrecip >= obsPrecipThres] > obsPrecipThres
@@ -73,12 +80,14 @@ if __name__ == "__main__":
             csData = np.array(nc.Dataset(csConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[csConfig["varName"]])
             dBZData = np.array(nc.Dataset(dBZConfig["dir"] + "{Y}{M:02d}.nc".format(Y=date.year, M=date.month))[dBZConfig["varName"]])
             taiwanMask3D = np.tile(taiwanMask[np.newaxis, :, :], reps=[dBZData.shape[0] ,1, 1])
+            percentFilterMap3D = np.tile(percentFilterMap[np.newaxis, :, :], reps=[dBZData.shape[0] ,1, 1])
             dateData3D = np.tile(dateData[:, np.newaxis, np.newaxis], reps=[1, thdData.shape[1], thdData.shape[2]])
 
         else:
             continue
 
-        condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D) * validPrecip, dtype=bool)
+        condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * \
+                             (csData >= 1e-6) * (taiwanMask3D) * validPrecip * percentFilterMap3D, dtype=bool)
         if np.sum(condition) == 0: continue
 
         x = csData[condition]
@@ -95,22 +104,24 @@ if __name__ == "__main__":
                 cmap="rainbow", vmin=35, vmax=40, edgecolor="white", \
                 linewidths=0.5, s=60)
 
-    print("Calculate Linear Regression")
-    lreg = stats.linregress(x=validX, y=validY)
-    print("Printing")
-    plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
-    title("Correlation of {X} and {Y} ".format(X=csConfig["varName"], Y="CG"), fontsize=25, y=1.075)
-    title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
-    title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
-    xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
-    ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
-    xticks(fontsize=15)
-    yticks(fontsize=15)
-    ylim(bottom=0)
-    cbar = colorbar(extend="max")
-    cbar.set_label("Reflectivity [dBZ]")
-    savefig("CG{}_dBZ{}.jpg".format(hourType, dBZthreshold))
-    clf()
+    if len(validX):
+        print("Valid Sample Size: {}".format(len(validX)))
+        print("Calculate Linear Regression")
+        lreg = stats.linregress(x=validX, y=validY)
+        print("Printing")
+        plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
+        title("Correlation of {X} and {Y} ".format(X=csConfig["varName"], Y="CG"), fontsize=25, y=1.075)
+        title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
+        title("Size: {} | PR: {} to {}\nJJA from {} to {}".format(len(validX), prMin, prMax, existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
+        xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
+        ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
+        xticks(fontsize=15)
+        yticks(fontsize=15)
+        ylim(bottom=0)
+        cbar = colorbar(extend="max")
+        cbar.set_label("Reflectivity [dBZ]")
+        savefig("CG{}_dBZ{}_pr{}-{}.jpg".format(hourType, dBZthreshold, prMin, prMax))
+        clf()
 
 
 

@@ -1,10 +1,10 @@
-import numpy as np
-import netCDF4 as nc
-import pandas as pd
-from os import path
 import json
+import numpy as np
+from os import path
+import pandas as pd
+import netCDF4 as nc
 from matplotlib.pyplot import *
-from scipy import stats
+import statsmodels.formula.api as sm
 from fullDateThunderGrid import Config
 
 if __name__ == "__main__":
@@ -45,9 +45,9 @@ if __name__ == "__main__":
         else:
             continue
 
-    validX = []
+    validX1 = []
     validY = []
-    validC = []
+    validX2 = []
     validT = []
 
     figure(figsize=(10, 10), dpi=250)
@@ -80,38 +80,25 @@ if __name__ == "__main__":
         condition = np.array((dBZData >= dBZthreshold) * (thdData != 0) * (csData >= 1e-6) * (taiwanMask3D) * validPrecip, dtype=bool)
         if np.sum(condition) == 0: continue
 
-        x = csData[condition]
+        x1 = csData[condition]
         y = thdData[condition]
-        c = wMaxData[condition]
+        x2 = wMaxData[condition]
         t = dateData3D[condition]
 
         if np.sum(condition != 0):
-            validX.extend(x)
+            validX1.extend(x1)
             validY.extend(y)
-            validC.extend(c)
+            validX2.extend(x2)
             validT.extend(t)
-        scatter(x, y, c=c, \
-                cmap="rainbow", edgecolor="white", vmin=0, vmax=10, \
-                linewidths=0.5, s=60)
 
-    print("Calculate Linear Regression")
-    lreg = stats.linregress(x=validX, y=validY)
-    print("Printing")
-    plot(validX, lreg.intercept + lreg.slope*np.array(validX), color="black")
-    title("Correlation of {X} and {Y} ".format(X=csConfig["varName"], Y="CG"), fontsize=25, y=1.075)
-    title("Y = {:.3f}X + {:.3f}\nCorr: {:.5f}".format(lreg.slope, lreg.intercept, lreg.rvalue), loc="left", fontsize=15)
-    title("JJA from {} to {} ".format(existDateOpt[0].year, existDateOpt[-1].year), loc="right", fontsize=15)
-    xlabel("{} [{}]".format(csConfig["description"], csConfig["unit"]), fontsize=15)
-    ylabel("Frequency of Thunder in {} hr(s)".format(hourType), fontsize=15)
-    xticks(fontsize=15)
-    yticks(fontsize=15)
-    ylim(bottom=0)
-    cbar = colorbar(extend="max")
-    cbar.set_label("max W (m/s)")
-    savefig("CG{}_dBZ{}.jpg".format(hourType, dBZthreshold))
-    clf()
+    df = pd.DataFrame({"Y": np.array(validY), 
+                       "X1": np.array(validX1), 
+                       "X2": np.array(validX2)})
 
+    result = sm.ols(formula="Y ~ X1 + X2", data = df).fit()
 
-
+    print(result.params)
+    print("=="*10)
+    print(result.summary())
 
 
