@@ -50,7 +50,7 @@ if __name__ == "__main__":
             if not os.path.exists(config["dailyPrecipOutDir"] + "{:04d}".format(pointYear)):
                 os.makedirs(config["dailyPrecipOutDir"] + "{:04d}".format(pointYear))
 
-        print(date)
+        #print(date)
         sumPrecip = np.full(fill_value=np.nan, shape=xlon.shape)
         countMap = np.zeros(shape=xlon.shape)
         columnName = "{:04d}{:02d}{:02d}".format(date.year, date.month, date.day)
