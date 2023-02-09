@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 if __name__ == "__main__":
-    caseType = "end21" # mid21 / end21
-    methodName = "fskao" # fskao / ytjhu
+    caseType = "mid21" # mid21 / end21
+    methodName = "ytjhu" # fskao / ytjhu
     NyearHist = 26 # 1980 - 2005
     NyearMid = 26 # 2040 - 2065
     NyearEnd = 25 # 2975 - 2099

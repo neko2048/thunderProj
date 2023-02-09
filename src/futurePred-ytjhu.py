@@ -43,7 +43,7 @@ if __name__ == "__main__":
         100: 4.6, 
     }
     percentileFunc = { # key for lower bound
-         0: lambda x:  0.075 * x + 0.0781, 
+         0: lambda x:  0.075 * x + 0.781, 
         10: lambda x:  0.018 * x + 1.030, 
         20: lambda x: -0.012 * x + 1.254, 
         30: lambda x:  0.055 * x + 1.358, 
@@ -94,7 +94,11 @@ if __name__ == "__main__":
         predThd = np.zeros(shape=maskCSData.shape)
 
         for key in np.arange(0, 100, 10):
+            #temp = np.where(maskCSData[percentileMap3D==key]>10,10,maskCSData[percentileMap3D==key])
+            #predThd[percentileMap3D==key] = percentileFunc[key](temp)
             predThd[percentileMap3D==key] = percentileFunc[key](maskCSData[percentileMap3D==key])
+        #temp = np.where(maskCSData[percentileMap3D==100]>10,10,maskCSData[percentileMap3D==100])
+        #predThd[percentileMap3D==100] = percentileFunc[90](temp)
         predThd[percentileMap3D==100] = percentileFunc[90](maskCSData[percentileMap3D==100])
 
         accumThd += np.nansum(predThd, axis=0)
@@ -103,7 +107,7 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"projection": ccrs.PlateCarree()}, dpi=250)
     ax.set_extent([np.min(xlon), np.max(xlon), np.min(xlat), np.max(xlat)])
-    FREQ = ax.pcolormesh(xlon, xlat, np.where(taiwanMask, accumThd, np.nan)/len(existDateOpt)*3, vmin=0, vmax=40, cmap="turbo")
+    FREQ = ax.pcolormesh(xlon, xlat, np.where(taiwanMask, accumThd, np.nan)/len(existDateOpt)*3*3, vmin=0, vmax=120, cmap="turbo")
     print(len(existDateOpt)/3)
     cbar = plt.colorbar(FREQ, extend="max")
     cbar.ax.tick_params(labelsize=15)

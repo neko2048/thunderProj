@@ -4,7 +4,7 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 if __name__ == "__main__":
-    caseType = "end21" # mid21 / end21
+    caseType = "mid21" # mid21 / end21
     methodName = "ytjhu" # fskao / ytjhu
     NyearHist = 26 # 1980 - 2015
     NyearMid = 26 # 2040 - 2065
